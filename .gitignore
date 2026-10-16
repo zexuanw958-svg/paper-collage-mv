@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+.cache/
+__pycache__/
+# 参考片截图属于原作者，不随仓库发布（本机留着给 Agent 对照工艺）
+paper-collage-mv/assets/bar/参考片-*
+paper-collage-mv/assets/bar/人物对照-参考片vs第五轮.jpg

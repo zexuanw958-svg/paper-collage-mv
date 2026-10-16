@@ -1,0 +1,8 @@
+{
+  "name": "paper-collage-mv",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "纸艺拼贴歌词 MV 工程（Canvas 2D + headless Chrome 渲染）",
+  "dependencies": { "puppeteer-core": "^25.11.0" }
+}

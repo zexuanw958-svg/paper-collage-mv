@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>纸艺 MV studio</title>
+<style>
+  @font-face { font-family: "NotoSerifSC"; src: url("assets/fonts/NotoSerifSC.ttf"); font-weight: 200 900; }
+  html, body { margin: 0; background: #1b1820; color: #eee; font: 13px system-ui, sans-serif; }
+  main { padding: 12px; display: grid; gap: 8px; }
+  #out { width: min(100%, 1280px); aspect-ratio: 16 / 9; height: auto; background: #F3EBDC; }
+  .bar { display: flex; gap: 10px; align-items: center; max-width: 1280px; }
+  #scrub { flex: 1; }
+</style>
+</head>
+<body>
+<main>
+  <canvas id="out" width="1920" height="1080"></canvas>
+  <div class="bar"><input id="scrub" type="range" min="0" max="60" step="0.0417" value="0"><span id="tt">loading…</span></div>
+</main>
+<!-- 引擎（按顺序） -->
+<script src="src/config.js"></script>
+<script src="src/paper.js"></script>
+<script src="src/lyrics_data.js"></script>
+<script src="src/lyrics.js"></script>
+<script src="src/puppet.js"></script>
+<script src="src/fx.js"></script>
+<!-- 你的 MV：人物、道具、场景、时间线，一个文件一个 script，按依赖顺序排 -->
+<script src="src/scenes/example.js"></script>
+</body>
+</html>
