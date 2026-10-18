@@ -1,6 +1,10 @@
 # /// script
 # requires-python = ">=3.11,<3.12"
-# dependencies = ["torch==2.5.1", "torchaudio==2.5.1", "demucs", "soundfile", "numpy<2", "librosa", "pypinyin", "mlx-whisper", "zhconv", "jieba"]
+# dependencies = [
+#   "torch==2.5.1", "torchaudio==2.5.1", "demucs", "soundfile", "numpy<2", "librosa", "pypinyin", "zhconv", "jieba",
+#   "mlx-whisper; sys_platform == 'darwin' and platform_machine == 'arm64'",
+#   "faster-whisper>=1.1; sys_platform != 'darwin' or platform_machine != 'arm64'",
+# ]
 # ///
 """歌曲片段 → 每个字的开唱时间（lyrics_timing.json）。
 
@@ -11,14 +15,22 @@
 lyrics.txt 一行一句，可以是整首歌（fetch_lyrics.py 取来的），脚本会自动挑出片段里唱到的那几句；
 片段从半句开始或在半句结束时，会把没唱到的字裁掉。
 
+听写：Apple 芯片的 Mac 用 mlx-whisper；其他电脑（Windows 等）自动换成 faster-whisper，在 CPU 上跑，慢一些。
+设环境变量 PAPER_MV_ASR=faster-whisper 可以在 Mac 上也强制走后者。
+
 做法：Demucs 分出人声 → whisper 听写两遍（带歌词提示、不带提示），按拼音和歌词匹配，估出每句的大致位置
 → MMS_FA 逐句开窗强制对齐 → 每个字贴到最近的人声起音点（0.12 秒内）。
 副歌和声重时 MMS_FA 容易漂：对齐分低于 0.25、又和听写差 0.4 秒以上的句子，先看人声包络（哪个句首前面有换气的静音
 就信哪个），看不出来就取更早的那个（宁早勿晚，source=听写估）。
 句内人声真的停了 --split-gap 秒以上、且停在词边界上的，拆成两行。打印的表里「⚠」行要复核：看 vocals.wav 那一段的响度包络（--env）。
 """
-import argparse, difflib, json, os, re, subprocess, sys
+import argparse, difflib, json, os, platform, re, subprocess, sys
 import numpy as np
+
+# Windows 命令行默认不是 UTF-8，打印「⚠」这类字会报错
+for _s in (sys.stdout, sys.stderr):
+    if hasattr(_s, 'reconfigure'):
+        _s.reconfigure(encoding='utf-8', errors='replace')
 
 UNIT = re.compile(r"[A-Za-z']+|[一-鿿]")
 
@@ -54,12 +66,35 @@ def separate(audio, work):
     return out
 
 
+def use_mlx():
+    if os.environ.get('PAPER_MV_ASR') == 'faster-whisper':
+        return False
+    return sys.platform == 'darwin' and platform.machine() == 'arm64'
+
+
+_FW = None
+
+
+def whisper_segments(vocals, prompt, lang):
+    """两种听写后端都整理成 [{'start','end','text','words':[{'word','start','end'}]}]。"""
+    global _FW
+    opts = dict(language=lang, word_timestamps=True, initial_prompt=prompt or None, condition_on_previous_text=False, temperature=0.0)
+    if use_mlx():
+        import mlx_whisper
+        return mlx_whisper.transcribe(vocals, path_or_hf_repo='mlx-community/whisper-large-v3-turbo', **opts)['segments']
+    from faster_whisper import WhisperModel
+    if _FW is None:
+        print('· 听写用 faster-whisper（CPU）；第一次要下载约 1.6 GB 模型')
+        _FW = WhisperModel('large-v3-turbo', device='cpu', compute_type='int8')
+    segs, _ = _FW.transcribe(vocals, beam_size=5, vad_filter=False, **opts)
+    return [{'start': g.start, 'end': g.end, 'text': g.text,
+             'words': [{'word': w.word, 'start': w.start, 'end': w.end} for w in (g.words or [])]} for g in segs]
+
+
 def transcribe(vocals, prompt, lang='zh'):
-    import mlx_whisper, zhconv
-    res = mlx_whisper.transcribe(vocals, path_or_hf_repo='mlx-community/whisper-large-v3-turbo', language=lang,
-                                 word_timestamps=True, initial_prompt=prompt or None, condition_on_previous_text=False, temperature=0.0)
+    import zhconv
     rec, segs = [], []
-    for seg in res['segments']:
+    for seg in whisper_segments(vocals, prompt, lang):
         segs.append((seg['start'], seg['end'], zhconv.convert(seg['text'], 'zh-cn').strip()))
         for w in seg.get('words', []):
             us = units(zhconv.convert(w['word'], 'zh-cn'))

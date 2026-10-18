@@ -1,5 +1,5 @@
 // lyrics.js: 歌词纸片字卡。每个字比开唱早 LEAD 秒落下（宁早勿晚），整句在 exit 时飘走。
-// 时间来自 assets/lyrics_timing.json（new_project.sh 生成 src/lyrics_data.js）。字卡默认画在屏幕空间（不跟镜头）。
+// 时间来自 assets/lyrics_timing.json（new_project.py 生成 src/lyrics_data.js）。字卡默认画在屏幕空间（不跟镜头）。
 // 自己在场景里画歌词（字长在物件上、红色大字放进画面……）时，每画出一个字就调 lyricMark(句号, 字号)，
 // tools/lyricscheck.mjs 靠这个检查每个字出现得够不够早、有没有漏句。
 const LEAD = .22;

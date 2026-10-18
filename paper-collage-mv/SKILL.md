@@ -11,6 +11,10 @@ description: 把一首歌或一段歌曲片段（mp3/wav/m4a，或抖音导出�
 
 本文件里的路径都相对 skill 目录（`SKILL_DIR`，就是这个 SKILL.md 所在的目录）。
 
+命令按 macOS 的写法给。在 Windows 上照样跑这些脚本，变量和路径改成 PowerShell 的写法（比如 `$S = "<skill 目录>\scripts"`）；不是 Apple 芯片的电脑，对歌词时间时会自动换成 faster-whisper 在 CPU 上听写，慢一些，第一次要下载约 1.6 GB 模型。
+
+第一次跑要从 Hugging Face 下载听写模型。下载一直不动（国内网络常见，`.incomplete` 文件停在 0 字节）时，停掉重跑，跑之前设环境变量 `HF_ENDPOINT=https://hf-mirror.com` 走国内镜像；开着代理时镜像会把请求转回 Hugging Face，这种情况让这条命令不走代理。
+
 **这份 skill 是写给 Codex 这类照着流程做的执行 Agent 的。** 联调第 13 轮拿同一首歌做了三组对照：不用 skill 的 Codex 交出来像幻灯片；同一个 Codex 用了 skill，做工和镜头最好；不用 skill、只被告诉「放开手去做」的 Claude 和它打平。所以如果你是 Claude：下面的流程、分镜格式和创意上的硬要求不用照着走，只把这里的脚本和引擎当工具用：切抖音尾音、取歌词、逐字对齐、纸艺引擎、渲染和检查。创意、分镜、节奏和自查都自己定。交付规格照旧：1080p、24fps、带原音轨，歌词宁早勿晚，渲染走排队锁。
 
 ## 交付物
@@ -43,7 +47,7 @@ uv run $S/lyrics_timing.py --audio work/song.wav --lyrics work/lyrics.txt --out 
 ### 2. 建工程
 
 ```bash
-$SKILL_DIR/scripts/new_project.sh <工程目录> work/song.wav work/lyrics_timing.json work/song_info.json
+uv run $SKILL_DIR/scripts/new_project.py <工程目录> work/song.wav work/lyrics_timing.json work/song_info.json
 cd <工程目录> && node render.mjs --sheet=0.5,2,4 --out=out/check/hello.jpg   # 看到示例画面就说明环境通了
 ```
 
@@ -105,7 +109,7 @@ node tools/motioncheck.mjs   # 有没有整屏好几秒什么都没在动、转�
 ```bash
 node render.mjs --frames --workers=3        # 自带排队锁：别的工程正在渲，它会等那边渲完再开始，不用自己查
 node render.mjs --encode --out=out/<歌名>MV.mp4 --audio=assets/song.wav
-$SKILL_DIR/scripts/check_mv.sh out/<歌名>MV.mp4                                    # 时长、音轨，并重出 out/check/全片.jpg 和 对照定版.jpg
+uv run $SKILL_DIR/scripts/check_mv.py out/<歌名>MV.mp4                             # 时长、音轨，并重出 out/check/全片.jpg 和 对照定版.jpg
 ```
 
 成片出来后，再抽查开头、高潮、结尾和每个转场的 strip。返修时只改动的段落用 `--frames --range=a:b` 补渲（先删掉那段的旧帧），再重新 encode，不要整片重来。

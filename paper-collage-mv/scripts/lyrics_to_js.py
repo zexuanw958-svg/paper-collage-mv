@@ -1,5 +1,11 @@
-"""把工程的 assets/lyrics_timing.json 转成 src/lyrics_data.js。改了时间以后重跑：python3 lyrics_to_js.py <工程目录>"""
+"""把工程的 assets/lyrics_timing.json 转成 src/lyrics_data.js。改了时间以后重跑：uv run lyrics_to_js.py <工程目录>"""
 import json, os, sys
+
+# Windows 命令行默认不是 UTF-8，打印中文和符号会报错
+for _s in (sys.stdout, sys.stderr):
+    if hasattr(_s, 'reconfigure'):
+        _s.reconfigure(encoding='utf-8', errors='replace')
+
 d = sys.argv[1] if len(sys.argv) > 1 else '.'
 data = json.load(open(os.path.join(d, 'assets/lyrics_timing.json'), encoding='utf-8'))
 for l in data['lines']:

@@ -13,6 +13,11 @@
 import argparse, json, subprocess, sys
 import numpy as np
 
+# Windows 命令行默认不是 UTF-8，打印中文和符号会报错
+for _s in (sys.stdout, sys.stderr):
+    if hasattr(_s, 'reconfigure'):
+        _s.reconfigure(encoding='utf-8', errors='replace')
+
 SR = 44100
 
 

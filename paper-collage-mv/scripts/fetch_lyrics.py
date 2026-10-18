@@ -17,6 +17,11 @@ DJ 版 / 加速版的歌词和原唱一样，优先取原唱（时间戳最准�
 """
 import argparse, json, os, re, sys, urllib.parse, urllib.request
 
+# Windows 命令行默认不是 UTF-8，打印中文和符号会报错
+for _s in (sys.stdout, sys.stderr):
+    if hasattr(_s, 'reconfigure'):
+        _s.reconfigure(encoding='utf-8', errors='replace')
+
 UA = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 'Referer': 'https://music.163.com'}
 CREDIT = re.compile(r'^\s*(作词|作曲|编曲|制作|出品|混音|监制|和声|吉他|贝斯|鼓|录音|母带|人声|发行|策划|统筹|OP|SP|词|曲|演唱|原唱|翻唱|后期|弦乐|键盘|钢琴|配唱|企划|版权|特别鸣谢|Produced|Lyrics|Composer|Arranger)\b.*[:：]', re.I)
 

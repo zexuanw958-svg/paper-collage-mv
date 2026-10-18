@@ -21,7 +21,7 @@
 
 - `uv run lyrics_timing.py --audio work/song.wav --work work/lyr --env 36.2:37.4`：打印这一段人声的响度包络，20 毫秒一行。一句开唱的地方，响度会从静音突然抬升。副歌和声连成一片时，包络看不出来；这种情况按宁早勿晚，取更早的候选。
 - 常见错法有三种。一是句首被对到上一句的拖音上，结果偏早。二是 DJ 段整句漂开一两秒，偏晚最要紧。三是英文短句（Baby、Come on）听写听不到，片段最后半秒才开唱的句子也容易被漏掉；它们要是在表里缺了，按时间轴补上，字只留唱到的。
-- 改法：直接编辑 `assets/lyrics_timing.json` 里那几个字的 `t`，保证一句里递增；然后跑 `python3 $SKILL_DIR/scripts/lyrics_to_js.py <工程目录>` 重新生成 `src/lyrics_data.js`，再跑 `node tools/lyricscheck.mjs`。
+- 改法：直接编辑 `assets/lyrics_timing.json` 里那几个字的 `t`，保证一句里递增；然后跑 `uv run $SKILL_DIR/scripts/lyrics_to_js.py <工程目录>` 重新生成 `src/lyrics_data.js`，再跑 `node tools/lyricscheck.mjs`。
 
 ## 一大段都对不上
 
